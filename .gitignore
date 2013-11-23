@@ -1,0 +1,15 @@
+# Binary files #
+*.class
+bin/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# Local Eclipse files #
+.metadata
+.settings/
+
+# Local generated files #
+doc/
