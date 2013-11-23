@@ -10,13 +10,13 @@ public class GA {
 	private byte[] population;
 	
 	private final int    		POPULATION_SIZE = 100;
-	private final double 		SURVIVAL_RATE   = 0.5;
-	private final double 		MUTATION_PROBABILITY = 0.04;
-	private static final int 	WIDTH = 7;
+	private final double 		SURVIVAL_RATE   = 0.3;
+	private final double 		MUTATION_PROBABILITY = 0.01;
+	private static final int 	WIDTH = 10;
 	private static final int 	STEPS_PER_FITNESS = 8;
-	private final int	 		FITNESS_TESTS_PER_INDV = 100;
-	private final int 	 		GENERATIONS = 6000;
-	private final int			INDETERMINATION_PENALTY = 5; // Blir ganget med 2^INDETERMINATION_PENALTY
+	private final int	 		FITNESS_TESTS_PER_INDV = 1000;
+	private final int 	 		GENERATIONS = 100000;
+	private final int			INDETERMINATION_PENALTY = 1; // Blir ganget med 2^INDETERMINATION_PENALTY
 	
 	/* Derivative constants */
 	private final int    SURVIVAL_COUNT  = (int) (POPULATION_SIZE * SURVIVAL_RATE);
@@ -30,9 +30,12 @@ public class GA {
 	private double random = 0.5;
 	
 	
+	/* Memory */
+	private Integer[] fitnesses = new Integer[0x100];
+	
 	public static void main(String[] args) {
 		new GA();
-//		printRuleTest(0x6f, 100);
+//		printRuleTest(0xe9, 100);
 	}
 	
 	public GA() {
@@ -56,6 +59,16 @@ public class GA {
 		System.out.println();
 		
 		printRuleTest(winner, 10);
+		
+		int best = Integer.MAX_VALUE;
+		int bestI = 0xfffff;
+		for (int i=0; i<fitnesses.length; i++) {
+			if (fitnesses[i] != null && fitnesses[i] < best) {
+				best = fitnesses[i];
+				bestI = i;
+			}
+		}
+		System.out.printf("Best from fitnesses list: Rule=%x, fitness=%d\n", bestI, best);
 	}
 	
 	private void printPopulationRules() {
@@ -85,7 +98,7 @@ public class GA {
 	
 	private byte mate(byte i1) {
 		byte i2 = survivorRules.get((int)((double)random*SURVIVAL_COUNT));
-		int mask = 0xff >>> (int)(getRandom(9));
+		int mask = getRandom(0x100);
 		i2 &= mask;
 		return (byte) (i1 | i2);
 	}
@@ -135,11 +148,20 @@ public class GA {
 	
 	private int fitness(int individual) {
 		int fitnessAccumulator = 0;
-		for (int i=0; i<FITNESS_TESTS_PER_INDV; i++) {
-			fitnessAccumulator += singleFitness(individual);
+		int fitness;
+
+		if (fitnesses[individual] == null) {
+			for (int i=0; i<FITNESS_TESTS_PER_INDV; i++) {
+				fitnessAccumulator += singleFitness(individual);
+			}
+			fitness = fitnessAccumulator;
+			
+			debug("Total fitness for rule %x:\t%d\n", population[individual], fitness);
+			fitnesses[individual] = fitness;
+		} else {
+			fitness = fitnesses[individual];
 		}
-		debug("Total fitness for rule %x:\t%d\n", population[individual], fitnessAccumulator);
-		return fitnessAccumulator;
+		return fitness;
 	}
 	
 	
@@ -174,7 +196,7 @@ public class GA {
 		result = s.count();
 
 		debug("\tResult: \t#zeroes: %d,  #ones: %d\n", result[0], result[1]);
-		int fitness = Math.abs(result[0]- solution[0]) + Math.abs(result[1] - solution[1]);
+		int fitness = Math.abs(result[0]- solution[0]) /*+ Math.abs(result[1] - solution[1])*/;
 		fitness <<= INDETERMINATION_PENALTY;
 		debug("\tFitness: %d\n", fitness);
 		return fitness;
