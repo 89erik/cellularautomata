@@ -3,12 +3,12 @@ package cellularautomata;
 public class Line {
 
 	Cell c0;
-	int rules;
+	Rule rule;
 	
-	public Line(int width, int rules) {
+	public Line(int width, Rule rule) {
 		if (width < 1) throw new IllegalArgumentException();
 		
-		this.rules = rules;
+		this.rule = rule;
 
 		Cell left;
 		Cell ci;
@@ -23,9 +23,9 @@ public class Line {
 		c0.setLeft(ci);
 	}
 	
-	private interface CellHandler {public void handle(Cell cell, Object returnValue);}
+	private interface CellHandler {public void handle(Cell cell, Object returnValue) throws InterruptedException;}
 	
-	public void next() {
+	public boolean next() {
 		iterate(new CellHandler() {
 			@Override
 			public void handle(Cell cell, Object returnValue) {
@@ -38,6 +38,34 @@ public class Line {
 				cell.goToNextState();
 			}
 		}, null);
+		return isStable();
+	}
+	
+	public boolean isStable() {
+		
+		boolean[] stable = {true};
+		iterate(new CellHandler() {
+			private int lastVal = -1;
+			@Override
+			public void handle(Cell cell, Object returnValue) throws InterruptedException {
+				if (lastVal == -1) {
+					lastVal = cell.value;
+				} 
+				if (lastVal != cell.value) {
+					boolean[] stable = (boolean[]) returnValue;
+					stable[0] = false;
+					throw new InterruptedException();
+				}
+				lastVal = cell.value;
+			}
+		}, stable);
+		return stable[0];
+	}
+	
+	public static void main(String[] args) {
+		Line l = new Line(10, new Rule());
+		l.print();
+		System.out.println(l.isStable());
 	}
 	
 	public int[] count() {
@@ -53,11 +81,15 @@ public class Line {
 	}
 
 	private Object iterate(CellHandler handler, Object returnValue) {
-		Cell ci = c0;
-		do {
-			handler.handle(ci, returnValue);
-			ci = ci.getRight();
-		} while (ci != c0);
+		try {
+			Cell ci = c0;
+			do {
+				handler.handle(ci, returnValue);
+				ci = ci.right;
+			} while (ci != c0);
+		} catch (InterruptedException e) {
+			
+		}
 		return returnValue;
 	}
 	
@@ -69,16 +101,6 @@ public class Line {
 				System.out.print(cell.value);
 			}
 		}, null);
-	}
-	
-	public static void main(String[] args) {
-		//					    76543210
-		Line s = new Line(20, 0b10101010);
-		
-		s.print();
-		System.out.println();
-		s.next();
-		s.print();
 	}
 	
 }

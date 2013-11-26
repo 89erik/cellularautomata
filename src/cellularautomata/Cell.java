@@ -4,17 +4,17 @@ public class Cell {
 	
 	int value;
 	private int nextValue;
-	private Cell left;
-	private Cell right;
+	Cell left;
+	Cell right;
 	private int id;
 	
-	private Line state;
+	private Line line;
 	
 	private static int count = 0;
 	
 	public Cell(Line state) {
 		super();
-		this.state = state;
+		this.line = state;
 		id = count++;
 		value = Math.random() > 0.5 ? 1 : 0;
 	}
@@ -32,17 +32,16 @@ public class Cell {
 		return id;
 	}
 	
-	public Cell getLeft() {
-		return left;
-	}
-	
-	public Cell getRight() {
-		return right;
-	}
-	
 	public void findNextValue() {
-		int currentState = (left.value  << 2) |  (this.value  << 1) | (right.value);
-		nextValue = ((state.rules >>> currentState) & 0b1);
+		int currentState = (left.left.left.value  << 6) 
+						 | (left.left.value       << 5) 
+						 | (left.value            << 4) 
+						 | (this.value            << 3) 
+						 | (right.value           << 2) 
+						 | (right.right.value     << 1) 
+						 | (right.right.right.value);
+		
+		nextValue = line.rule.get(currentState);
 	}
 	
 	public void goToNextState() {
