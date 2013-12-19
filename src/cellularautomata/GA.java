@@ -4,16 +4,16 @@ import java.util.LinkedList;
 
 public class GA {
 
-	private static final boolean DEBUG = false;
+	private static final boolean DEBUG = true;
 	private static final boolean SURVIVOR_STATS = false;
 	
 	private Rule[] population;
 	
 	private final int    		POPULATION_SIZE = 100;
-	private final double 		SURVIVAL_RATE   = 0.2;
-	static final double 				MUTATION_PROBABILITY = 0.015;
+	private final double 		SURVIVAL_RATE   = 0.10;
+	static final double 		MUTATION_PROBABILITY = 0.015;
 	private static final int 	WIDTH = 49;
-	private static final int 	STEPS_PER_FITNESS = WIDTH*2;
+	private static final int 	STEPS_PER_FITNESS = WIDTH;
 	private final int	 		FITNESS_TESTS_PER_INDV = 100;
 	private final int 	 		GENERATIONS = 100;
 //	private final int			INDETERMINATION_PENALTY = 1; // Blir ganget med 2^INDETERMINATION_PENALTY
@@ -35,10 +35,14 @@ public class GA {
 	
 	public static void main(String[] args) {
 		new GA();
-//		printRuleTest(0xe9, 100);
 	}
 	
 	public GA() {
+        boolean testRule = false;
+        if (testRule) {
+    		printRuleTest(new Rule(0x24981a0d6f83e2c9L, 0x1d716561593987b7L), 20);
+            return;
+        }
 		population = new Rule[POPULATION_SIZE];
 		generateInitialPopulation();
 		
@@ -135,7 +139,7 @@ public class GA {
 	
 	
 	private boolean singleFitness(int individual) {
-		debug("Fitness for rule %x \n", population[individual]);
+		debug("Fitness for rule %s \n", population[individual]);
 		Line s = new Line(WIDTH, population[individual]);
 		int[] solution, result;
 		solution = s.count();
@@ -152,12 +156,14 @@ public class GA {
 		
 	
 		for (int i=0; i<STEPS_PER_FITNESS; i++) {
-			if (DEBUG) {
-				s.print();
-				System.out.println();
-			}
+//			if (DEBUG) {
+//				s.print();
+//				System.out.println();
+//			}
 			if (!s.isStable()) {
 				s.next();
+			} else {
+				break;
 			}
 		}
 		if (DEBUG) {
@@ -174,10 +180,11 @@ public class GA {
 		return solution[0] == result[0] && solution[1] == result[1];
 	}
 	
-	public static void printRuleTest(Rule rule, int n) {
+	void printRuleTest(Rule rule, int n) {
 		if (n<0) throw new IllegalArgumentException();
-		
 		Line s;
+		population = new Rule[1];
+		population[0] = rule;
 		for (int i=0; i<n; i++) {
 			s = new Line(WIDTH, rule);
 			
@@ -188,6 +195,7 @@ public class GA {
 			}
 			s.print();
 			System.out.println();
+			System.out.println("Sucess: " + String.valueOf(singleFitness(0)));
 			System.out.println();
 		}
 
