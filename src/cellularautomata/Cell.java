@@ -45,6 +45,11 @@ public class Cell {
 	}
 	
 	public void goToNextState() {
+		if (nextValue == 1) {
+			line.hasOnes = true;
+		} else if (nextValue == 0) {
+			line.hasZeroes = true;
+		}
 		value = nextValue;
 	}
 	

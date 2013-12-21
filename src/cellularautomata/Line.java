@@ -5,6 +5,9 @@ public class Line {
 	Cell c0;
 	Rule rule;
 	
+	boolean hasOnes;
+	boolean hasZeroes;
+	
 	public Line(int width, Rule rule) {
 		if (width < 1) throw new IllegalArgumentException();
 		
@@ -25,7 +28,9 @@ public class Line {
 	
 	private interface CellHandler {public void handle(Cell cell, Object returnValue) throws InterruptedException;}
 	
-	public boolean next() {
+	public void next() {
+		hasOnes = false;
+		hasZeroes = false;
 		iterate(new CellHandler() {
 			@Override
 			public void handle(Cell cell, Object returnValue) {
@@ -38,28 +43,10 @@ public class Line {
 				cell.goToNextState();
 			}
 		}, null);
-		return isStable();
 	}
 	
 	public boolean isStable() {
-		
-		boolean[] stable = {true};
-		iterate(new CellHandler() {
-			private int lastVal = -1;
-			@Override
-			public void handle(Cell cell, Object returnValue) throws InterruptedException {
-				if (lastVal == -1) {
-					lastVal = cell.value;
-				} 
-				if (lastVal != cell.value) {
-					boolean[] stable = (boolean[]) returnValue;
-					stable[0] = false;
-					throw new InterruptedException();
-				}
-				lastVal = cell.value;
-			}
-		}, stable);
-		return stable[0];
+		return hasOnes ^ hasZeroes;
 	}
 	
 	public static void main(String[] args) {
